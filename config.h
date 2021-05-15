@@ -15,8 +15,8 @@ static const char *colors[SchemeLast][2] = {
 	[SchemeOut] = { "#000000", "#D8DEE9" },
 };
 /* -l option; if nonzero, dmenu uses vertical list with given number of lines */
-static unsigned int lines      = 4;
-static unsigned int columns    = 6;
+static unsigned int lines      = 3;
+static unsigned int columns    = 8;
 static const unsigned int border_width = 4;
 
 /*
