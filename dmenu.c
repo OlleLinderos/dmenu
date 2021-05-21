@@ -45,7 +45,7 @@ static unsigned int dmw = 0; /* make dmenu this wide */
 static int inputw = 0, promptw;
 static int lrpad; /* sum of left and right padding */
 static size_t cursor;
-static struct item *items = NULL;
+static struct item *items = NULL, *backup_items;
 static struct item *matches, *matchend;
 static struct item *prev, *curr, *next, *sel;
 static int mon = -1, screen;
@@ -567,12 +567,11 @@ savehistory(char *input)
 	free(history);
 }
 
-
 static void
 keypress(XKeyEvent *ev)
 {
 	char buf[32];
-	int len;
+	int len, i;
 	KeySym ksym;
 	Status status;
 
@@ -623,6 +622,27 @@ keypress(XKeyEvent *ev)
 			XConvertSelection(dpy, (ev->state & ShiftMask) ? clip : XA_PRIMARY,
 			                  utf8, utf8, win, CurrentTime);
 			return;
+		case XK_r:
+			if (histfile) {
+				if (!backup_items) {
+					backup_items = items;
+					items = calloc(histsz + 1, sizeof(struct item));
+					if (!items) {
+						die("cannot allocate memory");
+					}
+
+                                        // TODO: Hide duplicates
+					for (i = 0; i < histsz; i++) {
+						items[i].text = history[i];
+					}
+				} else {
+					free(items);
+					items = backup_items;
+					backup_items = NULL;
+				}
+			}
+			match();
+			goto draw;
 		case XK_Left:
 			movewordedge(-1);
 			goto draw;
@@ -999,7 +1019,8 @@ main(int argc, char *argv[])
 		else if (!strcmp(argv[i], "-g")) {   /* number of columns in grid */
 			columns = atoi(argv[++i]);
 			if (lines == 0) lines = 1;
-		} else if (!strcmp(argv[i], "-l")) { /* number of lines in grid */
+		 /* number of lines in grid */
+		} else if (!strcmp(argv[i], "-l")) {   /* number of lines in vertical list */
 			lines = atoi(argv[++i]);
 			if (columns == 0) columns = 1;
 		} 
